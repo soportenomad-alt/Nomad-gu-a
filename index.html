@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solicitud de Recolección | Nomad</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <img src="./assets/logo-nomad.png" alt="Nomad Genetics" />
+        <div class="header-titles">
+          <h1>Formulario de solicitud (Logística / Recolección)</h1>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <label for="tipoSolicitud" class="header-label">Tipo de solicitud <span class="req">*</span></label>
+        <select id="tipoSolicitud" required class="header-select">
+          <option value="">Selecciona una opción</option>
+          <option value="SOLICITUD GUÍA">SOLICITUD GUÍA</option>
+          <option value="SOLICITUD DE TOMA DE MUESTRA">SOLICITUD DE TOMA DE MUESTRA</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="solicitudForm">
+        <div class="section-title">Datos precargados</div>
+
+        <div class="grid">
+          <div class="field col-6">
+            <label for="kam">KAM <span class="req">*</span></label>
+            <select id="kam" required>
+              <option value="" selected>Selecciona una opción</option>
+              <option value="Ángel">Ángel</option>
+              <option value="Andrea">Andrea</option>
+              <option value="Marymar">Marymar</option>
+              <option value="Claudia">Claudia</option>
+              <option value="KAM MTY">KAM MTY</option>
+              <option value="Implant Puebla">Implant Puebla</option>
+            </select>
+            </div>
+
+          <div class="field col-6">
+            <label for="kamEmail">Correo del KAM (automático) <span class="req">*</span></label>
+            <input id="kamEmail" type="text" placeholder="Se carga al seleccionar el KAM" readonly required />
+</div>
+
+          <div class="field col-12">
+            <label for="medico">Médico <span class="req">*</span></label>
+            <input id="medico" list="medicoList" placeholder="Escribe para buscar y seleccionar..." required />
+          <datalist id="medicoList"></datalist>
+          </div>
+        </div>
+
+        <div class="section-title">Datos de carga manual (KAM)</div>
+
+        <div class="grid">
+          <div class="field col-12">
+            <label>Paciente(s) <span class="req">*</span></label>
+            <div class="patients">
+              <div id="patientsWrap"></div>
+              <div class="row-actions">
+                <button class="btn-ghost" type="button" id="addPatientBtn">+ Agregar otro paciente</button>
+              </div>
+              <div class="small">Puedes cargar más de un paciente por médico.</div>
+            </div>
+          </div>
+
+          <div class="field col-6">
+            <label for="prueba">Prueba <span class="req">*</span></label>
+            <input id="prueba" type="text" placeholder="Ej. OncoPanel / Germinal / etc." required />
+          </div>
+
+          <div class="field col-6">
+            <label for="contacto">Contacto (Médico o responsable de la muestra) <span class="req">*</span></label>
+            <input id="contacto" type="text" placeholder="Nombre del contacto" required />
+          </div>
+
+          <div class="field col-6">
+            <label for="hospital">Hospital <span class="req">*</span></label>
+            <input id="hospital" type="text" placeholder="Nombre del hospital" required />
+          </div>
+
+          <div class="field col-6">
+            <label for="telefono">Teléfono de contacto <span class="req">*</span></label>
+            <input id="telefono" type="tel" placeholder="Ej. 55XXXXXXXX" required />
+          </div>
+
+          <div class="field col-12">
+            <label for="direccion">Dirección completa <span class="req">*</span></label>
+            <textarea id="direccion" placeholder="Calle, número, colonia, alcaldía/municipio, estado, CP" required></textarea>
+          </div>
+
+          <div class="field col-12">
+            <label for="referencias">Referencias de ubicación<span class="req">*</span></label>
+            <textarea id="referencias" placeholder="Ej. entrada por..., piso..., referencias de estacionamiento..." required></textarea>
+          </div>
+        <div class="field col-12">
+          <label for="comentarios">Comentarios</label>
+          <textarea id="comentarios" placeholder="Comentarios adicionales (opcional)"></textarea>
+        </div>
+
+
+          <div class="field col-6">
+            <label for="fecha">Fecha <span class="req">*</span></label>
+            <input id="fecha" type="date" required />
+          </div>
+
+          <div class="field col-6">
+            <label for="horario">Horario <span class="req">*</span></label>
+            <input id="horario" type="text" placeholder="Ej. 10:00–12:00" required />
+          </div>
+        </div>
+<div id="errorBox" class="error"></div>
+
+        <div class="row-actions">
+          <button class="btn-primary" type="submit">Generar y enviar solicitud</button>
+          <button class="btn-secondary" type="button" onclick="location.reload()">Limpiar</button>
+        </div>
+      </form>
+    </div>
+
+    
+    <div class="card" id="realtimePanel" style="margin-top:16px;">
+      <div class="section-title" style="margin-top:0;">Solicitudes en tiempo real</div>
+
+      <div class="small" id="authStatus">Acceso solo para Backoffice.</div>
+
+      <div class="grid" style="margin-top:10px;">
+        <div class="field col-6">
+          <label for="loginEmail">Usuario (correo)</label>
+          <input id="loginEmail" type="email" placeholder="log.mx@nomadgenetics.com" />
+        </div>
+        <div class="field col-6">
+          <label for="loginPass">Contraseña</label>
+          <input id="loginPass" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="row-actions" style="margin-top:10px;">
+        <button class="btn-ghost" type="button" id="btnLogin">Entrar</button>
+        <button class="btn-ghost" type="button" id="btnLogout" style="display:none;">Salir</button>
+        <button class="btn-ghost" type="button" id="btnRefresh" style="display:none;">Actualizar</button>
+        <button class="btn-ghost" type="button" id="btnExport" style="display:none;">Exportar Excel</button>
+      </div>
+
+      <div id="rtDataWrap" style="display:none;">
+<div class="small" style="margin-top:10px;">Últimas 20 solicitudes (automático).</div>
+
+      <div style="overflow:auto; margin-top:10px;">
+        <table class="rt-table" id="rtTable" style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+      <th>Fecha de envío</th>
+      <th>Tipo de solicitud</th>
+      <th>KAM</th>
+      <th>Correo KAM</th>
+      <th>Médico</th>
+      <th>Paciente(s)</th>
+      <th>Prueba</th>
+      <th>Contacto</th>
+      <th>Teléfono</th>
+      <th>Hospital</th>
+      <th>Dirección completa</th>
+      <th>Referencias</th>
+      <th>Comentarios</th>
+      <th>Fecha visita</th>
+      <th>Horario</th>
+    </tr>
+          </thead>
+          <tbody id="rtBody">
+            <tr><td colspan="14" class="small">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="small" style="margin-top:10px;">
+        Acceso permitido únicamente para: <b>log.mx@nomadgenetics.com</b> y <b>backoffice@nomadgenetics.com</b>.
+      </div>
+    </div>
+</div>
+
+
+
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
