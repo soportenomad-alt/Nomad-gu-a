@@ -170,13 +170,63 @@
       <th>Comentarios</th>
       <th>Fecha visita</th>
       <th>Horario</th>
+      <th>Seguimiento</th>
     </tr>
           </thead>
           <tbody id="rtBody">
-            <tr><td colspan="14" class="small">—</td></tr>
+            <tr><td colspan="16" class="small">—</td></tr>
           </tbody>
         </table>
+      
+      <!-- Modal Seguimiento -->
+      <div class="modal" id="seguimientoModal" style="display:none;">
+        <div class="modal-backdrop" id="seguimientoBackdrop"></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="seguimientoTitle">
+          <div class="modal-head">
+            <div class="modal-title" id="seguimientoTitle">Seguimiento</div>
+            <button class="btn-ghost" type="button" id="btnSeguimientoClose">Cerrar</button>
+          </div>
+
+          <div class="grid" style="margin-top:10px;">
+            <div class="field col-4">
+              <label for="segEstado">Estado</label>
+              <select id="segEstado">
+                <option value="">—</option>
+                <option value="Nuevo">Nuevo</option>
+                <option value="Contactado">Contactado</option>
+                <option value="En proceso">En proceso</option>
+                <option value="Recolectado">Recolectado</option>
+                <option value="Completado">Completado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div class="field col-4">
+              <label for="segProxima">Próxima acción / Fecha de visita</label>
+              <input id="segProxima" type="date" />
+            </div>
+            <div class="field col-4">
+              <label for="segKam">KAM</label>
+              <input id="segKam" type="text" placeholder="—" />
+            </div>
+            <div class="field col-12">
+              <label for="segComentario">Comentarios</label>
+              <textarea id="segComentario" rows="4" placeholder="Agrega notas de seguimiento..."></textarea>
+            </div>
+          </div>
+
+          <div class="row-actions" style="margin-top:10px; justify-content:flex-end;">
+            <button class="btn" type="button" id="btnSeguimientoSave">Guardar</button>
+          </div>
+
+          <div class="divider" style="margin:14px 0;"></div>
+
+          <div class="small" style="opacity:.9;">Historial</div>
+          <div id="segHistorial" class="history" style="margin-top:8px;">
+            <div class="small">—</div>
+          </div>
+        </div>
       </div>
+</div>
 
       <div class="small" style="margin-top:10px;">
         Acceso permitido únicamente para: <b>log.mx@nomadgenetics.com</b> y <b>backoffice@nomadgenetics.com</b>.
@@ -190,6 +240,10 @@
 
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script type="module" src="./app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script src="./app.bundle.v4.js?v=20260220_4"></script>
 </body>
 </html>
