@@ -80,6 +80,22 @@ function escapeHtml(v){
   }[ch]));
 }
 
+// Genera un folio base por envío (misma guía base) y un folio por paciente.
+// Ejemplo: G20260224-121504-123-01
+function generateBaseFolio(){
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2,"0");
+  const y = d.getFullYear();
+  const m = pad(d.getMonth()+1);
+  const da = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  const rnd = String(Math.floor(Math.random()*900)+100); // 100-999
+  return `G${y}${m}${da}-${hh}${mm}${ss}-${rnd}`;
+}
+
+
 let fbApp = null;
 let db = null;
 let auth = null;
@@ -217,14 +233,16 @@ function renderRows(items){
       createdAtText = d ? d.toLocaleString() : "";
     }catch(e){ createdAtText = ""; }
 
-    const tr = document.createElement("tr");
+    
+const pacienteDisplay = Array.isArray(it.pacientes) ? (it.pacientes[0] || "") : (it.pacientes || "");
+const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(createdAtText)}</td>
       <td>${escapeHtml(it.tipoSolicitud || "")}</td>
       <td>${escapeHtml(it.kam || "")}</td>
       <td>${escapeHtml(it.kamEmail || "")}</td>
       <td>${escapeHtml(it.medico || "")}</td>
-      <td>${escapeHtml(Array.isArray(it.pacientes) ? it.pacientes.join(" | ") : (it.pacientes || ""))}</td>
+      <td>${escapeHtml(pacienteDisplay)}</td>
       <td>${escapeHtml(it.prueba || "")}</td>
       <td>${escapeHtml(it.contacto || "")}</td>
       <td>${escapeHtml(it.telefono || "")}</td>
@@ -237,7 +255,7 @@ function renderRows(items){
       <td>
         <button class="btn btn-mini btn-follow" type="button"
           data-id="${escapeHtml(it.id || "")}"
-          data-medico="${escapeHtml(it.medico || "")}"
+          data-paciente="${escapeHtml(pacienteDisplay)}"
           data-kam="${escapeHtml(it.kam || "")}">
           Seguimiento
         </button>
@@ -304,17 +322,31 @@ function exportToExcel(){
 
 // ---------- Seguimiento (CRM-style) ----------
 let currentSeguimientoId = null;
-let currentSeguimientoMedico = "";
+let currentSeguimientoPaciente = "";
 
 function qs(id){ return document.getElementById(id); }
 
-function openSeguimientoModal({id, medico, kam}){
+function openSeguimientoModal({id, paciente, kam}){
   currentSeguimientoId = id;
-  currentSeguimientoMedico = medico || "";
+  currentSeguimientoPaciente = paciente || "";
+
   const modal = qs("seguimientoModal");
   if (!modal) return;
 
-  qs("seguimientoTitle").textContent = `Seguimiento — ${currentSeguimientoMedico || "Solicitud"}`;
+  // paciente viene como "FOLIO — NOMBRE"
+  let folio = "";
+  let nombre = (currentSeguimientoPaciente || "").trim();
+  if (nombre.includes("—")){
+    const parts = nombre.split("—");
+    folio = (parts[0] || "").trim();
+    nombre = (parts.slice(1).join("—") || "").trim();
+  } else if (nombre.includes("-") && nombre.length > 8){
+    // fallback: si solo viene folio
+    folio = nombre;
+    nombre = "Paciente";
+  }
+
+  qs("seguimientoTitle").textContent = `Seguimiento — ${nombre || "Paciente"}${folio ? " (" + folio + ")" : ""}`;
 
   // Pre-fill KAM
   const kamInput = qs("segKam");
@@ -337,7 +369,7 @@ function closeSeguimientoModal(){
   if (!modal) return;
   modal.style.display = "none";
   currentSeguimientoId = null;
-  currentSeguimientoMedico = "";
+  currentSeguimientoPaciente = "";
 }
 
 function fmtDate(d){
@@ -471,10 +503,10 @@ function bindSeguimientoUI(){
     const btn = ev.target?.closest?.(".btn-follow");
     if (!btn) return;
     const id = btn.getAttribute("data-id") || "";
-    const medico = btn.getAttribute("data-medico") || "";
+    const paciente = btn.getAttribute("data-paciente") || "";
     const kam = btn.getAttribute("data-kam") || "";
     if (!id) return;
-    openSeguimientoModal({id, medico, kam});
+    openSeguimientoModal({id, paciente, kam});
   });
 
   // ESC to close
@@ -538,11 +570,22 @@ async function logSolicitudIfPossible(payload){
   const tipoSolicitud = document.getElementById("tipoSolicitud")?.value?.trim() || "";
 
 
+  const baseFolio = generateBaseFolio();
+const pacientesArr = Array.isArray(pacientes) ? pacientes : (pacientes ? [pacientes] : []);
+
+// 1 solicitud por paciente (misma guía base)
+for (let i = 0; i < pacientesArr.length; i++){
+  const nombre = (pacientesArr[i] || "").trim();
+  if (!nombre) continue;
+  const folio = `${baseFolio}-${String(i+1).padStart(2,"0")}`;
+  const pacienteDisplay = `${folio} — ${nombre}`;
+
   await addDoc(collection(db, "solicitudes"), {
     createdAt: serverTimestamp(),
     createdByUid: auth.currentUser.uid,
     createdByEmail: auth.currentUser.email || null,
-    kam, kamEmail, medico, pacientes,
+    kam, kamEmail, medico,
+    pacientes: [pacienteDisplay],
     prueba, contacto, hospital, direccion, referencias, telefono,
     fecha, horario,
     tipoSolicitud,
@@ -550,6 +593,7 @@ async function logSolicitudIfPossible(payload){
     emailCc: payload.cc,
     emailSubject: payload.subject
   });
+}
 }
 
 // ---------- Form logic ----------
