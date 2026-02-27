@@ -138,11 +138,24 @@ button{
 
 
 /* Realtime table */
+.rt-table{
+  width:100%;
+  border-collapse:collapse;
+  /* Mantiene columnas alineadas entre encabezado y cuerpo,
+     evitando que el contenido “estire” unas celdas más que otras */
+  table-layout:fixed;
+  /* Prefiere scroll horizontal antes de comprimir demasiado las columnas */
+  min-width: 1900px;
+}
 .rt-table th, .rt-table td{
   border:1px solid var(--border);
   padding: 8px 10px;
   font-size: 13px;
   vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }
 .rt-table th{
   background:#f9fafb;
@@ -150,7 +163,32 @@ button{
   text-align:left;
   position: sticky;
   top: 0;
+  z-index: 2;
 }
+
+/* Anchos sugeridos por columna (evita “saltos” y descuadres visuales) */
+.rt-table th:nth-child(1),  .rt-table td:nth-child(1){  width:140px; }  /* Fecha de envío */
+.rt-table th:nth-child(2),  .rt-table td:nth-child(2){  width:120px; }  /* Folio grupo */
+.rt-table th:nth-child(3),  .rt-table td:nth-child(3){  width:120px; }  /* Folio */
+.rt-table th:nth-child(4),  .rt-table td:nth-child(4){  width:170px; }  /* Tipo */
+.rt-table th:nth-child(5),  .rt-table td:nth-child(5){  width:110px; }  /* KAM */
+.rt-table th:nth-child(6),  .rt-table td:nth-child(6){  width:200px; }  /* Correo */
+.rt-table th:nth-child(7),  .rt-table td:nth-child(7){  width:180px; }  /* Médico */
+.rt-table th:nth-child(8),  .rt-table td:nth-child(8){  width:220px; }  /* Pacientes */
+.rt-table th:nth-child(9),  .rt-table td:nth-child(9){  width:150px; }  /* Prueba */
+.rt-table th:nth-child(10), .rt-table td:nth-child(10){ width:170px; }  /* Contacto */
+.rt-table th:nth-child(11), .rt-table td:nth-child(11){ width:140px; }  /* Teléfono */
+.rt-table th:nth-child(12), .rt-table td:nth-child(12){ width:180px; }  /* Hospital */
+.rt-table th:nth-child(13), .rt-table td:nth-child(13){ width:320px; }  /* Dirección */
+.rt-table th:nth-child(14), .rt-table td:nth-child(14){ width:320px; }  /* Referencias */
+.rt-table th:nth-child(15), .rt-table td:nth-child(15){ width:260px; }  /* Comentarios */
+.rt-table th:nth-child(16), .rt-table td:nth-child(16){ width:140px; }  /* Fecha visita */
+.rt-table th:nth-child(17), .rt-table td:nth-child(17){ width:140px; }  /* Horario */
+.rt-table th:nth-child(18), .rt-table td:nth-child(18){ width:210px; }  /* Seguimiento */
+
+/* El botón y texto de seguimiento no deben “romper” raro */
+.rt-table td:nth-child(18) button{ white-space: nowrap; }
+.rt-table td:nth-child(18) .small{ display:block; margin-top:6px; }
 
 
 /* Header: tipo de solicitud a la derecha */
