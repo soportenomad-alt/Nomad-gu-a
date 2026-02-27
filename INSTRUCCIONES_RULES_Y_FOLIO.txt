@@ -1,0 +1,13 @@
+CAMBIOS APLICADOS
+
+1) app.bundle.v4.js
+- Sigue guardando 1 documento por paciente.
+- Mantiene folioGrupo y folio.
+- Se removieron los campos 'pacientesTotal' y 'pacienteIndex' para que no choquen con Firestore Rules (keys().hasOnly).
+
+2) firestore.rules
+- Incluye reglas listas para pegar en Firebase Console que aceptan el esquema nuevo (paciente/prueba + folios) y conserva compatibilidad con el esquema anterior.
+
+INSTRUCCIONES
+- Sube este ZIP a tu hosting/GitHub.
+- En Firebase Console > Firestore Database > Rules, pega el contenido de firestore.rules y publica.

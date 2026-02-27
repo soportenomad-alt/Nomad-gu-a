@@ -104,10 +104,12 @@ button{
 }
 .patient-item{
   display:flex;
+  flex-wrap:wrap;
   gap:10px;
   align-items:center;
   margin-bottom:10px;
 }
+.patient-item input{min-width:220px;}
 .patient-item input{flex:1}
 .patient-item .remove{
   background:#fee2e2;

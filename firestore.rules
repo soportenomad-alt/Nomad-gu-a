@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isBackoffice() {
+      return request.auth != null
+        && request.auth.token.email in [
+          "log.mx@nomadgenetics.com",
+          "backoffice@nomadgenetics.com"
+        ];
+    }
+
+    // Esquema NUEVO: 1 doc = 1 paciente (con folioGrupo/folio)
+    function validSolicitudV2() {
+      return request.resource.data.keys().hasOnly([
+        "createdAt",
+        "createdByUid",
+        "createdByEmail",
+
+        "tipoSolicitud",
+        "folioGrupo",
+        "folio",
+
+        "kam","kamEmail","medico",
+        "paciente",
+        "prueba",
+
+        "contacto","hospital","direccion","referencias","telefono",
+        "fecha","horario",
+
+        "emailTo","emailCc","emailSubject",
+
+        // resumen seguimiento (opcionales)
+        "seguimientoEstado",
+        "seguimientoProximaFecha",
+        "seguimientoUltimoComentario",
+        "seguimientoUpdatedAt"
+      ]);
+    }
+
+    // Esquema ANTERIOR: 1 doc con varios pacientes (compatibilidad)
+    function validSolicitudV1() {
+      return request.resource.data.keys().hasOnly([
+        "createdAt",
+        "createdByUid",
+        "createdByEmail",
+        "kam","kamEmail","medico","pacientes",
+        "prueba","contacto","hospital","direccion","referencias","telefono",
+        "fecha","horario",
+        "emailTo","emailCc","emailSubject",
+        "tipoSolicitud",
+        "seguimientoEstado",
+        "seguimientoProximaFecha",
+        "seguimientoUltimoComentario",
+        "seguimientoUpdatedAt"
+      ]);
+    }
+
+    function validSeguimientoEntry() {
+      return request.resource.data.keys().hasOnly([
+        "estado",
+        "proximaFecha",
+        "kam",
+        "comentario",
+        "createdBy",
+        "createdAt"
+      ]);
+    }
+
+    match /solicitudes/{docId} {
+
+      // Solo Backoffice puede VER
+      allow read: if isBackoffice();
+
+      // Crear: sesión válida + dueño + esquema V2 o V1
+      allow create: if request.auth != null
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && (validSolicitudV2() || validSolicitudV1());
+
+      // Backoffice puede actualizar SOLO resumen seguimiento
+      allow update: if isBackoffice()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "seguimientoEstado",
+          "seguimientoProximaFecha",
+          "seguimientoUltimoComentario",
+          "seguimientoUpdatedAt"
+        ]);
+
+      allow delete: if false;
+
+      match /seguimiento/{fid} {
+        allow read: if isBackoffice();
+        allow create: if isBackoffice() && validSeguimientoEntry();
+        allow update, delete: if false;
+      }
+    }
+  }
+}

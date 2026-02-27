@@ -229,7 +229,7 @@ function renderRows(items){
 
   body.innerHTML = "";
   if (!items || !items.length){
-    body.innerHTML = '<tr><td colspan="18" class="small">Sin datos.</td></tr>';
+    body.innerHTML = '<tr><td colspan="16" class="small">Sin datos.</td></tr>';
     return;
   }
 
@@ -243,16 +243,10 @@ function renderRows(items){
     }catch(e){ createdAtText = ""; }
 
     
-const pacienteName = (it.paciente || (Array.isArray(it.pacientes) ? ((it.pacientes[0]?.paciente) || it.pacientes[0] || "") : (it.pacientes || "")) || "");
-const folioGrupoDisp = (it.folioGrupo || "");
-const folioDisp = (it.folio || "");
-const pacienteDisplay = pacienteName;
-const pacienteForModal = (folioDisp ? (folioDisp + " — " + pacienteDisplay) : pacienteDisplay);
+const pacienteDisplay = Array.isArray(it.pacientes) ? ((it.pacientes[0]?.paciente) || it.pacientes[0] || "") : (it.pacientes || "");
 const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(createdAtText)}</td>
-      <td>${escapeHtml(folioGrupoDisp)}</td>
-      <td>${escapeHtml(folioDisp)}</td>
       <td>${escapeHtml(it.tipoSolicitud || "")}</td>
       <td>${escapeHtml(it.kam || "")}</td>
       <td>${escapeHtml(it.kamEmail || "")}</td>
@@ -270,7 +264,7 @@ const tr = document.createElement("tr");
       <td>
         <button class="btn btn-mini btn-follow" type="button"
           data-id="${escapeHtml(it.id || "")}"
-          data-paciente="${escapeHtml(pacienteForModal)}"
+          data-paciente="${escapeHtml(pacienteDisplay)}"
           data-kam="${escapeHtml(it.kam || "")}">
           Seguimiento
         </button>
@@ -554,13 +548,23 @@ function subscribeRealtime(){
     });
 }
 
+  const q = query(collection(db, "solicitudes"), orderBy("createdAt", "desc"));
+  unsubscribe = onSnapshot(q, (snap) => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderRows(items);
+  }, (err) => {
+    console.error(err);
+    const body = document.getElementById("rtBody");
+    if (body){
+      body.innerHTML = '<tr><td colspan="16" class="small">No se pudo leer Firestore (revisa reglas / login).</td></tr>';
+    }
+  });
+}
 
 async function refreshOnce(){
   if (!db) return;
-  const snap = await db.collection("solicitudes")
-    .orderBy("createdAt", "desc")
-    .limit(50)
-    .get();
+  const q = query(collection(db, "solicitudes"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
   const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderRows(items);
 }
@@ -591,51 +595,29 @@ async function logSolicitudIfPossible(payload){
   const tipoSolicitud = document.getElementById("tipoSolicitud")?.value?.trim() || "";
 
 
-  const folioGrupo = generateBaseFolio();
-  const pacientesArr = Array.isArray(pacientes) ? pacientes : (pacientes ? [pacientes] : []);
-  const total = pacientesArr.length || 0;
+  const baseFolio = generateBaseFolio();
+const pacientesArr = Array.isArray(pacientes) ? pacientes : (pacientes ? [pacientes] : []);
 
-  // Guardamos 1 documento por paciente para que el seguimiento sea individual.
-  // Usamos batch para escribir todo junto (más rápido y consistente).
-  const batch = db.batch();
+// 1 solicitud por paciente (misma guía base)
+for (let i = 0; i < pacientesArr.length; i++){
+  const nombre = (pacientesArr[i] || "").trim();
+  if (!nombre) continue;
+  const folio = `${baseFolio}-${String(i+1).padStart(2,"0")}`;
+  const pacienteDisplay = `${folio} — ${nombre}`;
 
-  for (let i = 0; i < pacientesArr.length; i++){
-    const item = pacientesArr[i];
-
-    const nombre = (typeof item === "string" ? item : (item?.paciente || item?.nombre || "")).trim();
-    const pruebaItem = (typeof item === "string" ? "" : (item?.prueba || "")).trim();
-
-    if (!nombre) continue;
-
-    const folio = folioGrupo + "-" + String(i+1).padStart(2,"0");
-
-    const docRef = db.collection("solicitudes").doc();
-    batch.set(docRef, {
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdByUid: auth.currentUser.uid,
-      createdByEmail: auth.currentUser.email || null,
-
-      // grupo / folio
-      folioGrupo,
-      folio,
-      // datos comunes
-      tipoSolicitud,
-      kam, kamEmail, medico,
-      contacto, hospital, direccion, referencias, telefono,
-      fecha, horario,
-
-      // datos por paciente
-      paciente: nombre,
-      prueba: pruebaItem || "",
-
-      // correo
-      emailTo: payload.to,
-      emailCc: payload.cc,
-      emailSubject: payload.subject
-    });
-  }
-
-  await batch.commit();
+  await db.collection("solicitudes").add({
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    createdByUid: auth.currentUser.uid,
+    createdByEmail: auth.currentUser.email || null,
+    kam, kamEmail, medico,
+    pacientes,
+    prueba, contacto, hospital, direccion, referencias, telefono,
+    fecha, horario,
+    emailTo: payload.to,
+    emailCc: payload.cc,
+    emailSubject: payload.subject
+  });
+}
 }
 
 // ---------- Form logic ----------

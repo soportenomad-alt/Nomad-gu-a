@@ -273,7 +273,14 @@ async function logSolicitudIfPossible(payload){
   const kamEmail = document.getElementById("kamEmail")?.value?.trim() || "";
   const medico = document.getElementById("medico")?.value?.trim() || "";
   const pacientes = getPatients();
-  const prueba = document.getElementById("prueba")?.value?.trim() || "";
+  let prueba = "";
+  const pats = getPatients();
+  if (pats.length <= 1) {
+    prueba = document.getElementById("prueba")?.value?.trim() || "";
+  } else {
+    const det = getPatientsWithTests();
+    prueba = det.map(d => `${d.paciente}: ${d.prueba}`).join(" | ");
+  }
   const contacto = document.getElementById("contacto")?.value?.trim() || "";
   const hospital = document.getElementById("hospital")?.value?.trim() || "";
   const direccion = document.getElementById("direccion")?.value?.trim() || "";
@@ -339,11 +346,12 @@ function addPatient(value="") {
   const item = document.createElement("div");
   item.className = "patient-item";
 
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "Nombre del paciente";
-  input.value = value;
-  input.required = true;
+  const name = document.createElement("input");
+  name.type = "text";
+  name.placeholder = "Nombre del paciente";
+  name.value = value;
+  name.required = true;
+  name.className = "patient-name";
 
   const btn = document.createElement("button");
   btn.type = "button";
@@ -352,23 +360,72 @@ function addPatient(value="") {
   btn.addEventListener("click", () => {
     item.remove();
     ensureAtLeastOnePatient();
+    updatePatientsUI();
   });
 
-  item.appendChild(input);
+  item.appendChild(name);
   item.appendChild(btn);
   wrap.appendChild(item);
+
+  updatePatientsUI();
 }
 
 function getPatients() {
   const wrap = document.getElementById("patientsWrap");
-  const inputs = [...wrap.querySelectorAll("input")];
+  const inputs = [...wrap.querySelectorAll(".patient-name")];
   return inputs.map(i => i.value.trim()).filter(Boolean);
+}
+
+function getPatientsWithTests() {
+  const wrap = document.getElementById("patientsWrap");
+  const items = [...wrap.querySelectorAll(".patient-item")];
+  return items.map(it => ({
+    paciente: (it.querySelector(".patient-name")?.value || "").trim(),
+    prueba: (it.querySelector(".patient-test")?.value || "").trim(),
+  })).filter(o => o.paciente);
+}
+
+function updatePatientsUI() {
+  const wrap = document.getElementById("patientsWrap");
+  const items = [...wrap.querySelectorAll(".patient-item")];
+  const multi = items.length > 1;
+
+  const pruebaInput = document.getElementById("prueba");
+  const pruebaField = pruebaInput ? pruebaInput.closest(".field") : null;
+
+  if (multi) {
+    if (pruebaField) pruebaField.style.display = "none";
+    if (pruebaInput) pruebaInput.required = false;
+
+    for (const item of items) {
+      let t = item.querySelector(".patient-test");
+      if (!t) {
+        t = document.createElement("input");
+        t.type = "text";
+        t.placeholder = "Prueba";
+        t.className = "patient-test";
+        const name = item.querySelector(".patient-name");
+        name.insertAdjacentElement("afterend", t);
+      }
+      t.required = true;
+    }
+  } else {
+    if (pruebaField) pruebaField.style.display = "";
+    if (pruebaInput) pruebaInput.required = true;
+
+    for (const item of items) {
+      const t = item.querySelector(".patient-test");
+      if (t) t.remove();
+    }
+  }
 }
 
 function ensureAtLeastOnePatient() {
   const wrap = document.getElementById("patientsWrap");
-  if (wrap.querySelectorAll("input").length === 0) addPatient("");
+  if (wrap.querySelectorAll(".patient-name").length === 0) addPatient("");
+  updatePatientsUI();
 }
+
 
 function buildEmailPayload() {
   const cfg = window.NOMAD_FORM_CONFIG;
@@ -378,7 +435,6 @@ function buildEmailPayload() {
   const medico = document.getElementById("medico").value.trim();
   const pacientes = getPatients();
 
-  const prueba = document.getElementById("prueba").value.trim();
   const contacto = document.getElementById("contacto").value.trim();
   const hospital = document.getElementById("hospital").value.trim();
   const direccion = document.getElementById("direccion").value.trim();
@@ -387,7 +443,22 @@ function buildEmailPayload() {
   const fecha = document.getElementById("fecha").value.trim();
   const horario = document.getElementById("horario").value.trim();
 
-  const subject = `Solicitud de recolección | ${medico} | ${hospital} | ${fecha}`;
+  let prueba = "";
+  let pacientesYPruebasLines = [];
+
+  if (pacientes.length <= 1) {
+    prueba = document.getElementById("prueba").value.trim();
+  } else {
+    const det = getPatientsWithTests();
+    prueba = det.map(d => `${d.paciente}: ${d.prueba}`).join(" | ");
+    pacientesYPruebasLines = det.map(d => `- ${d.paciente}: ${d.prueba}`);
+  }
+
+  const patientLabel =
+    pacientes.length === 1 ? pacientes[0] :
+    (pacientes.length > 1 ? `${pacientes[0]} +${pacientes.length - 1}` : "");
+
+  const subject = `Solicitud de recolección | ${patientLabel || medico} | ${hospital} | ${fecha}`;
 
   const lines = [
     "SOLICITUD DE RECOLECCIÓN / LOGÍSTICA - NOMAD",
@@ -396,8 +467,17 @@ function buildEmailPayload() {
     `Correo KAM: ${kamEmail}`,
     "",
     `Médico: ${medico}`,
-    `Paciente(s): ${pacientes.join(" | ")}`,
-    `Prueba: ${prueba}`,
+  ];
+
+  if (pacientes.length <= 1) {
+    lines.push(`Paciente(s): ${pacientes.join(" | ")}`);
+    lines.push(`Prueba: ${prueba}`);
+  } else {
+    lines.push("Pacientes y Pruebas:");
+    lines.push(...pacientesYPruebasLines);
+  }
+
+  lines.push(
     `Contacto (médico/responsable muestra): ${contacto}`,
     "",
     `Hospital: ${hospital}`,
@@ -409,7 +489,7 @@ function buildEmailPayload() {
     `Horario: ${horario}`,
     "------------------------------------------------------------",
     "Nota: Responder a este correo para coordinar confirmación y ajustes.",
-  ];
+  );
 
   const body = lines.join("\n");
 
@@ -423,16 +503,26 @@ function buildEmailPayload() {
 
 function validateRequired() {
   const reqIds = [
-    "kam", "kamEmail", "medico", "prueba", "contacto", "hospital",
+    "kam", "kamEmail", "medico", "contacto", "hospital",
     "direccion","referencias", "telefono", "fecha", "horario"
   ];
   for (const id of reqIds){
     const el = document.getElementById(id);
     if (!el.value || !String(el.value).trim()) return false;
   }
+
   const pats = getPatients();
-  return pats.length > 0 && pats.every(p => p.length > 0);
+  if (pats.length === 0 || !pats.every(p => p.length > 0)) return false;
+
+  if (pats.length <= 1) {
+    const prueba = document.getElementById("prueba");
+    return !!(prueba && String(prueba.value || "").trim());
+  }
+
+  const det = getPatientsWithTests();
+  return det.length === pats.length && det.every(d => d.prueba && d.prueba.trim().length > 0);
 }
+
 
 function openGmailCompose({to, cc, subject, body}) {
   // Abre el redactor de Gmail en el navegador
