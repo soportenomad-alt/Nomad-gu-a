@@ -286,6 +286,7 @@ async function logSolicitudIfPossible(payload){
   const direccion = document.getElementById("direccion")?.value?.trim() || "";
   const referencias = document.getElementById("referencias")?.value?.trim() || "";
   const telefono = document.getElementById("telefono")?.value?.trim() || "";
+  const comentarios = document.getElementById("comentarios")?.value?.trim() || "";
   const fecha = document.getElementById("fecha")?.value?.trim() || "";
   const horario = document.getElementById("horario")?.value?.trim() || "";
 
@@ -295,6 +296,7 @@ async function logSolicitudIfPossible(payload){
     createdByEmail: auth.currentUser.email || null,
     kam, kamEmail, medico, pacientes,
     prueba, contacto, hospital, direccion, referencias, telefono,
+    comentarios,
     fecha, horario,
     emailTo: payload.to,
     emailCc: payload.cc,
@@ -440,6 +442,7 @@ function buildEmailPayload() {
   const direccion = document.getElementById("direccion").value.trim();
   const referencias = document.getElementById("referencias").value.trim();
   const tel = document.getElementById("telefono").value.trim();
+  const comentarios = (document.getElementById("comentarios")?.value || "").trim();
   const fecha = document.getElementById("fecha").value.trim();
   const horario = document.getElementById("horario").value.trim();
 
@@ -484,6 +487,7 @@ function buildEmailPayload() {
     `Dirección: ${direccion}`,
     `Referencias: ${referencias}`,
     `Teléfono contacto: ${tel}`,
+    (comentarios ? `Comentarios: ${comentarios}` : ""),
     "",
     `Fecha: ${fecha}`,
     `Horario: ${horario}`,

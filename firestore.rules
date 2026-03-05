@@ -26,6 +26,7 @@ service cloud.firestore {
         "prueba",
 
         "contacto","hospital","direccion","referencias","telefono",
+        "comentarios",
         "fecha","horario",
 
         "emailTo","emailCc","emailSubject",
@@ -46,6 +47,7 @@ service cloud.firestore {
         "createdByEmail",
         "kam","kamEmail","medico","pacientes",
         "prueba","contacto","hospital","direccion","referencias","telefono",
+        "comentarios",
         "fecha","horario",
         "emailTo","emailCc","emailSubject",
         "tipoSolicitud",
