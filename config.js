@@ -1,7 +1,7 @@
 // Configuración del formulario (edita si cambian correos)
 window.NOMAD_FORM_CONFIG = {
   recipients: ["log.mx@nomadgenetics.com", "backoffice@nomadgenetics.com"],
-  kamEmails: {"Ángel": "kam2.mx@nomadgenetics.com", "Berenice": "kam2.mx@nomadgenetics.com", "Andrea": "kam3.mx@nomadgenetics.com", "Marymar": "ger.genomica@nomadgenetics.com", "Claudia": "kam.gdl1@nomadgenetics.com", "KAM MTY": "kam.mty1@nomadgenetics.com",
+  kamEmails: {"Ángel": "kam2.mx@nomadgenetics.com", "Lizeth": "inventado@nomadgene.com", "Berenice": "kam2.mx@nomadgenetics.com", "Andrea": "kam3.mx@nomadgenetics.com", "Marymar": "ger.genomica@nomadgenetics.com", "Claudia": "kam.gdl1@nomadgenetics.com", "KAM MTY": "kam.mty1@nomadgenetics.com",
     "Implant Puebla": "vanvanmed@hotmail.com, vanvan.molecular@coionco.com",
     "Logística": "log.mx@nomadgenetics.com"
 },
