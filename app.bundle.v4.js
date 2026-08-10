@@ -872,22 +872,22 @@ async function onSubmit(ev){
 
   // Muestra el modal de éxito
   const successModal = document.getElementById("successModal");
+  const btnSuccessClose = document.getElementById("btnSuccessClose");
   if (successModal) {
     successModal.style.display = "flex";
-    
-    const btnSuccessClose = document.getElementById("btnSuccessClose");
-    if (btnSuccessClose) {
-      btnSuccessClose.style.display = "inline-block";
-      btnSuccessClose.onclick = () => { 
-        successModal.style.display = "none"; 
-      };
-    }
   }
 
-  // Abre la aplicación de correo con un breve retraso para que el usuario alcance a ver el modal
+  // Abre la aplicación de correo con un breve retraso para que el usuario vea el modal
   setTimeout(() => {
     openEmailApp(payload);
-  }, 800);
+    // Muestra el botón de cerrar tras abrir el correo
+    if (btnSuccessClose) {
+      btnSuccessClose.style.display = "block";
+      btnSuccessClose.onclick = () => {
+        successModal.style.display = "none";
+      };
+    }
+  }, 900);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
