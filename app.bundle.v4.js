@@ -816,14 +816,25 @@ function validateRequired() {
   return pats.every(p => (p.paciente || "").trim().length > 0 && (p.prueba || "").trim().length > 0);
 }
 
-function openGmailCompose({to, cc, subject, body}) {
-  // Abre el redactor de Gmail en el navegador
-  const url = "https://mail.google.com/mail/?view=cm&fs=1" +
-    `&to=${encodeURIComponent(to)}` +
-    (cc ? `&cc=${encodeURIComponent(cc)}` : "") +
-    `&su=${encodeURIComponent(subject)}` +
-    `&body=${encodeURIComponent(body)}`;
-  window.open(url, "_blank");
+function openEmailApp(payload) {
+  const {to, cc, subject, body} = payload;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    const mailtoUrl = `mailto:${encodeURIComponent(to)}` +
+      `?subject=${encodeURIComponent(subject)}` +
+      (cc ? `&cc=${encodeURIComponent(cc)}` : "") +
+      `&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+  } else {
+    // Abre el redactor de Gmail en el navegador
+    const url = "https://mail.google.com/mail/?view=cm&fs=1" +
+      `&to=${encodeURIComponent(to)}` +
+      (cc ? `&cc=${encodeURIComponent(cc)}` : "") +
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
+    window.open(url, "_blank");
+  }
 }
 
 function copySummaryToClipboard(payload){
@@ -859,8 +870,24 @@ async function onSubmit(ev){
     console.error(e);
   }
 
-  // Abre Gmail compose
-  openGmailCompose(payload);
+  // Muestra el modal de éxito
+  const successModal = document.getElementById("successModal");
+  if (successModal) {
+    successModal.style.display = "flex";
+    
+    const btnSuccessClose = document.getElementById("btnSuccessClose");
+    if (btnSuccessClose) {
+      btnSuccessClose.style.display = "inline-block";
+      btnSuccessClose.onclick = () => { 
+        successModal.style.display = "none"; 
+      };
+    }
+  }
+
+  // Abre la aplicación de correo con un breve retraso para que el usuario alcance a ver el modal
+  setTimeout(() => {
+    openEmailApp(payload);
+  }, 800);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
